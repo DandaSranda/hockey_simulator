@@ -22,8 +22,8 @@ ATTRIBUTES = [
 
 ERR_MSG = {
     -1: "\n>>> Invalid input!\n",
-    -3: "\n>>> Teams can't score the same number of goals!\n>>> Enter the final result and then choose if \n>>> it ended in Overtime(o) or Shootout(s).\n",
-    -4: "\n>>> Enter value again.\n",
+    -2: "\n>>> Teams can't score the same number of goals!\n>>> Enter the final result and then choose if \n>>> it ended in Overtime(o) or Shootout(s).\n",
+    -3: "\n>>> Enter value again.\n",
 }
 
 
@@ -71,7 +71,7 @@ def read_csv():
         return record
 
 
-def longest_name(teams):
+def get_longest_name(teams):
     return len(max(teams.values(), key=len))
 
 
@@ -172,7 +172,7 @@ def check_input(first, second):
     if not first.isdigit() or not second.isdigit():
         return -1
     if first == second:
-        return -3
+        return -2
     return 0
 
 
@@ -209,7 +209,7 @@ def scores_input(team_objects, match, round_n, LONGEST_NAME_LEN):
             elif is_over_time.lower() == "-" or not len(is_over_time):
                 break
             else:
-                err_output(ERR_MSG[-4])
+                err_output(ERR_MSG[-3])
 
     first_team_tup = (team_objects[match[0]].code, first)
     second_team_tup = (team_objects[match[1]].code, second)
@@ -284,9 +284,9 @@ def upcoming_matches(team_objects, matches, LONGEST_NAME_LEN, round_n, finish):
     if finish + 1 == round_n:
         print(">>> No more matches.")
     else:
-        for rnd in range(round_n, finish + 1):
-            print(f"Round {rnd}".center(LONGEST_NAME_LEN * 2 + len("   :   "), "-"))
-            for match in matches[rnd]:
+        for round in range(round_n, finish + 1):
+            print(f"Round {round}".center(LONGEST_NAME_LEN * 2 + len("   :   "), "-"))
+            for match in matches[round]:
                 first = team_objects[match[0]].name
                 second = team_objects[match[1]].name
                 print(
@@ -355,7 +355,7 @@ def update_csv(team_objects, team_codes):
 
 
 def clear_past_matches():
-    with open("past_matches.csv", "w", encoding="utf-8") as f:
+    with open("past_matches.csv", "w", encoding="utf-8") as _:
         return
 
 
@@ -384,7 +384,7 @@ def restart():
 
 def get_dificulty():
     while True:
-        rounds = input("\n> Choose difficulty - (13|26|52) rounds:\n>>> ")
+        rounds = input("> Choose difficulty - (13|26|52) rounds:\n>>> ")
         if rounds in ["13", "26", "52"]:
             return int(rounds)
         else:
@@ -408,7 +408,11 @@ def winner_print(table_sorted, teams):
     print(f">>> Winning team of this season: {winner} <<<\n")
 
 
-def main():
+def get_status():
+    """
+    Decide if game continues or starts from the beginning.
+    Return number of rounds to be played
+    """
     n_rounds = 13
     while True:
         game_status = input(
@@ -416,13 +420,13 @@ def main():
         )
         if game_status == "p":
             print()
-            break
+            return n_rounds
         elif game_status == "n":
             sure = input("> Are you sure? (y|n)\n>>> ")
             if sure == "y":
                 n_rounds = get_dificulty()
                 restart()
-                break
+                return n_rounds
             elif sure == "n":
                 continue
             else:
@@ -430,19 +434,22 @@ def main():
         else:
             err_output(ERR_MSG[-1])
 
-    """****************Init****************"""
+
+def main():
+    n_rounds = get_status()
+
     teams_full_record = read_csv()
 
     teams = create_team_dict(teams_full_record)
 
-    LONGEST_NAME_LEN = longest_name(teams)
+    LONGEST_NAME_LEN = get_longest_name(teams)
 
     team_codes = [key for key in teams]
 
     team_objects = create_team_objects(teams_full_record)
 
     matches = generate_matches(team_codes, n_rounds)
-    """************************************"""
+
     while True:
         round_n = int(team_objects[team_codes[0]].matches) + 1
 
