@@ -101,11 +101,7 @@ def create_team_objects(teams_full_record):
     return team_objects
 
 
-def statistics_table(teams, codes, LONGEST_NAME_LEN):
-    """
-    Prints out table of statistics sorted by priority of: 1) most points, 2) most goals scored in, 3) least goals scored against
-    """
-    print()
+def sort_table(teams, codes):
     pnts = []
     for code in codes:
         pnts.append(
@@ -117,7 +113,15 @@ def statistics_table(teams, codes, LONGEST_NAME_LEN):
             )
         )
 
-    srted_table = sorted(pnts, key=lambda x: (-int(x[1]), -int(x[2]), int(x[3])))
+    return sorted(pnts, key=lambda x: (-int(x[1]), -int(x[2]), int(x[3])))
+
+
+def statistics_table(teams, codes, LONGEST_NAME_LEN):
+    """
+    Prints out table of statistics sorted by priority of: 1) most points, 2) most goals scored in, 3) least goals scored against
+    """
+    print()
+    srted_table = sort_table(teams, codes)
     print(" " * 4 + "|", end=" ")
     print(f"Team".center(LONGEST_NAME_LEN + 6), end=" | ")
     for name in [
@@ -202,7 +206,7 @@ def scores_input(team_objects, match, round_n, LONGEST_NAME_LEN):
             elif is_over_time.lower() == "s":
                 shootout = 1
                 break
-            elif is_over_time.lower() == "-":
+            elif is_over_time.lower() == "-" or not len(is_over_time):
                 break
             else:
                 err_output(ERR_MSG[-4])
@@ -399,6 +403,11 @@ def display_menu():
             err_output(ERR_MSG[-1])
 
 
+def winner_print(table_sorted, teams):
+    winner = teams[table_sorted[0][0]].name
+    print(f">>> Winning team of this season: {winner} <<<\n")
+
+
 def main():
     n_rounds = 13
     while True:
@@ -464,7 +473,7 @@ def main():
             else:
                 print("\n> End of season. No more upcoming matches.\n")
         elif action == "a":
-            if round_n < n_rounds:
+            if round_n <= n_rounds:
                 upcoming_matches(
                     team_objects, matches, LONGEST_NAME_LEN, round_n, n_rounds
                 )
@@ -480,6 +489,8 @@ def main():
             return
         else:
             err_output(ERR_MSG[-1])
+        if round_n - 1 == n_rounds:
+            winner_print(sort_table(team_objects, team_codes), team_objects)
 
 
 if __name__ == "__main__":
